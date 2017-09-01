@@ -411,7 +411,7 @@ for(i=0; i<K; i++)
 d_mean[i] = ld_mean[i] = 0;
 for(i=0; i< K-1; i++)
 ent_k[i] = 0;
-#pragma omp parallel for num_threads(num_threads) private(i,j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
+#pragma omp parallel for num_threads(num_threads) private(j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
 for(i=0; i<system.n_models; i++)
 {
 if(flag_par.verbose)
@@ -558,7 +558,7 @@ ent_k[i] = 0;
 for(i=0; i<K; i++)
 d_mean[i] = ld_mean[i] = 0;
 
-#pragma omp parallel for num_threads(num_threads) private(i,j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
+#pragma omp parallel for num_threads(num_threads) private(j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
 for(i=0; i<system.n_models; i++)
 {
 if(flag_par.verbose)
@@ -687,7 +687,7 @@ phit[i][j] = tors_mi2.phi[j][i];
 for(i=0; i<K; i++)
 ent_k[i] = d_mean[i] = ld_mean[i] = 0;
 
-#pragma omp parallel for num_threads(num_threads) private(i,j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
+#pragma omp parallel for num_threads(num_threads) private(j,k,d,logdk) shared(ent_k, d_mean, ld_mean)
 for(i=0; i<system.n_models; i++)
 {
 if(flag_par.verbose)
