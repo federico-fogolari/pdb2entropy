@@ -7,7 +7,7 @@ PDB2ENTROPY: entropy calculation from conformational ensembles
 ?????, ????-????, ?????
 
 In the built-in superposition tool, routines are suitable modifications of
-those written by D.L. Theobald, therefore, if you use this routines, please 
+those written by D.L. Theobald, therefore, if you use these routines, please 
 cite:
 Theobald, D. L. (2005). Rapid calculation of rmsds using a quaternion-based
 characteristic polynomial. Acta. Crystallogr. A, 61, 478–480.
@@ -30,7 +30,7 @@ There are two type of records in this file:
 - Adjacency record
 NEXT  residue_name  atom_name1  atom_name2  cutoff_distance  
 
-A residue is adjacent to the next if its atom1 is within cutoff_distance from atom_name2 of the next residue. 
+A residue is adjacent to the next if its atom1 is within cutoff_distance from atom_name2 of the next residue (whatever its name). 
 The next residue is identified by the program by checking residue number and insertion character within the same segment and chain. 
 
 - Torsion record
@@ -56,29 +56,29 @@ Usage:
 ./pdb2entropy pdb_infile def_infile outfile [Options]
 Options:
 -n (max k neighbours for listing entropies (20 default))
--mi (compute entropy from mist)
--kmi k (compute entropy from mist approx. at 2k (default k 1))
--c X (cutoff distance (Angstrom) for MI)
+-mi (compute entropy from MIST)
+-kmi k (compute entropy from MIST approx. at 2k (default k 1))
+-c X (cutoff distance (Angstrom) for MI pair filtering)
 -mr X (minimum resolution (in radians) assumed to avoid log(0), 5e-4 default)
 -nt X (number of threads to be used, if less than 1, e.g. with -nt 0, the program finds the number of threads available)
--l (lists all defined torsion angles as rows with values for each structure)
+-l (lists all defined torsion angles as rows with values for each conformation)
 -rt (superpose all structures on the first one)
--wp pdb_file (write superimposed strcutures in pdb_file)
+-wp pdb_file (write superimposed structures in pdb_file)
 -v (verbose mode)
 
 Usage examples:
 
 --- compute entropy for each residue and sum all entropies. Use 8 threads for parallel computation:
 
-./pdb2entropy lys_no_sec.pdb tors_next_def.dat lys_no_sec.out -nt 8 
+./pdb2entropy sample.pdb tors_next_def.dat sample.out -nt 8 
 
 
 --- compute entropy using MIST. Consider only first order mutual information for torsions closer in space than 8.0 A. Use 8 threads for parallel computation. Superpose all structure on the first one:
 
-./pdb2entropy lys_no_sec.pdb tors_next_def.dat lys_no_sec_mi_1.out -c 8.0 -mi -kmi 1  -nt 8  -rt  
+./pdb2entropy sample.pdb tors_next_def.dat sample_mi_1.out -c 8.0 -mi -kmi 1  -nt 8  -rt  
 
---- compute entropy using MIST. Consider mutual information among groups of up to 2 torsion angles, when at least a couple of torsions is closer in space than 8.0 A. Superpose all structure on the first one and write rotated-translated structures in lys_no_sec_sup.pdb. Use all available threads:
-./pdb2entropy lys_no_sec.pdb tors_next_def.dat lys_no_sec_mi_1.out -c 8.0 -mi -kmi 1  -nt 0  -rt -wp lys_no_sec_sup.pdb 
+--- compute entropy using MIST. Consider mutual information among groups of up to 2 torsion angles, when at least a couple of torsions is closer in space than 8.0 A. Superpose all structure on the first one and write rotated-translated structures in sample_sup.pdb. Use all available threads:
+./pdb2entropy sample.pdb tors_next_def.dat sample_mi_2.out -c 8.0 -mi -kmi 2  -nt 0  -rt -wp sample_sup.pdb 
 
 OUTPUT
 
@@ -114,7 +114,7 @@ mutual informations:
 - the total entropy value (in R units)
 
 NOTE
-The list of entropies with using different k neighbours highlights
+The list of entropies using different k neighbours highlights
 how good is sampling. The entropy should be fairly independent of k,
 except perhaps for the first neighbours, which have higher variance. 
 We found effective, with some thousands conformational samples for 
