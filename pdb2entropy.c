@@ -748,7 +748,7 @@ for(k = 0; k < K - 1; k++)
 entropy.h2[kk][k] = ent_k[k];
 entropy.mi[kk][k] = entropy.h2[kk][k] - entropy.h1[entropy.i1[kk]][k] - entropy.h1[entropy.i2[kk]][k];
 
-fprintf(fp_out_1,"MI    %5i %9.2lf %9.2lf --- %5i %5i\n", k+1, entropy.mi[kk][k], d_mean[k+1], entropy.i1[kk], entropy.i2[kk]);
+fprintf(fp_out_1,"MI    %5i %9.2lf %9.2lf --- %5i %5i\n", k+1, -entropy.mi[kk][k], d_mean[k+1], entropy.i1[kk], entropy.i2[kk]);
 }
 kk++;
 }
