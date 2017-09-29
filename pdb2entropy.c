@@ -117,7 +117,7 @@ int omp_thread_count() {
     n += 1;
     return n;
 }
-# 132 "../../pdb2entropy.c"
+
 struct Flag_par {
         char file_in_pdb[120];
         char file_in_def[120];
@@ -1830,7 +1830,7 @@ void suppos(double **ref, double **mob, int len, double *t, double **R, double *
 
     for(j=0; j<4; j++)
     M[j][j] = M[j][j] - lambdamax;
-# 1854 "../../pdb2entropy.c"
+
     for(j=1; j<4; j++) ind_max[j] = -1;
     for(j=1; j<4; j++)
       {
@@ -1872,7 +1872,7 @@ void suppos(double **ref, double **mob, int len, double *t, double **R, double *
 
       for(j=0; j<4; j++)
         ev[j] = ev[j]/mod;
-# 1906 "../../pdb2entropy.c"
+
     quat_to_rot(ev,R);
 
 
@@ -1903,7 +1903,7 @@ void suppos(double **ref, double **mob, int len, double *t, double **R, double *
         free(M[i]);
     free(M);
 }
-# 2041 "../../pdb2entropy.c"
+
 double CoordsInnerProd(double **coords, int len)
 {
     int i;
