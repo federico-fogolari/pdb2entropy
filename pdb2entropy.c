@@ -1774,7 +1774,7 @@ void suppos(double **ref, double **mob, int len, double *t, double **R, double *
     double innerprod;
     double lambdamax;
     double coeff[3];
-    double **x1, **x2, c1[3], c2[3];
+    double **x1, **x2, c1[3], c2[3], tmp[3];
     double **M;
     double M_copy[4][4];
     double ev[4], v[4], mod;
@@ -1882,14 +1882,14 @@ void suppos(double **ref, double **mob, int len, double *t, double **R, double *
     for(i=0; i <len; i++)
     {
     for(j=0; j < 3; j++)
-     c2[j] = mob[i][j];
+     tmp[j] = mob[i][j] - c2[j];
     for(j=0; j < 3; j++)
      mob[i][j] = 0.0;
     for(j=0; j < 3; j++)
     for(k=0; k < 3; k++)
-    mob[i][j] = mob[i][j] + R[j][k]*c2[k];
+    mob[i][j] = mob[i][j] + R[j][k]*tmp[k];
     for(j=0; j < 3; j++)
-    mob[i][j] = mob[i][j] + t[j];
+    mob[i][j] = mob[i][j] + t[j] + c2[j];
     }
     for(i=0; i <len; i++)
         {
