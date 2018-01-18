@@ -39,6 +39,10 @@ TORS residue_name torsion_name atom_name1 atom_name2 atom_name3 atom_name4 symme
 The torsion_name torsion angle for residue_name is the dihedral defined by the four atom_name in sequential order. Symmetry is an integer defining the rotational symmetry of the torsion angle (e.g. 2 for rotation of a carboxylic group, 3 for rotation of a methyl group).
 The signs + and - indicate atoms on the following and previous adjacent residue, respectively.
 
+- Angle records (not present in the sample tors_next_def.dat file) in the form:
+ANG residue_name angle_name atom_name1 atom_name2 atom_name3 
+are also recognized.
+
 The sample file tors_next_def.dat contains data for proteins and nucleic acids.
 
 RUNNING PDB2ENTROPY
@@ -62,20 +66,19 @@ Options:
 -mr X (minimum resolution (in radians) assumed to avoid log(0), 5e-4 default)
 -nt X (number of threads to be used, if less than 1, e.g. with -nt 0, the program finds the number of threads available)
 -l (lists all defined torsion angles as rows with values for each conformation)
--rt (superpose all structures on the first one)
+-nort (do not superpose all structures on the first one)
 -wp pdb_file (write superimposed structures in pdb_file)
 -v (verbose mode)
 
 Usage examples:
 
---- compute entropy for each residue and sum all entropies. Use 8 threads for parallel computation:
+--- compute entropy for each residue and sum all entropies. Use 8 threads for parallel computation, do not superpose all structures on first one:
 
-./pdb2entropy sample.pdb tors_next_def.dat sample.out -nt 8 
-
+./pdb2entropy sample.pdb tors_next_def.dat sample.out -nt 8 -nort
 
 --- compute entropy using MIST. Consider only first order mutual information for torsions closer in space than 8.0 A. Use 8 threads for parallel computation. Superpose all structure on the first one:
 
-./pdb2entropy sample.pdb tors_next_def.dat sample_mi_1.out -c 8.0 -mi -kmi 1  -nt 8  -rt  
+./pdb2entropy sample.pdb tors_next_def.dat sample_mi_1.out -c 8.0 -mi -kmi 1  -nt 8   
 
 --- compute entropy using MIST. Consider mutual information among groups of up to 2 torsion angles, when at least a couple of torsions is closer in space than 8.0 A. Superpose all structure on the first one and write rotated-translated structures in sample_sup.pdb. Use all available threads:
 ./pdb2entropy sample.pdb tors_next_def.dat sample_mi_2.out -c 8.0 -mi -kmi 2  -nt 0  -rt -wp sample_sup.pdb 
@@ -108,7 +111,7 @@ Then the output lists the mutual information among groups:
 - the average distance to the k^th nearest neighbour in the pooled torsions
 - the two groups of torsions
 
-and finally the sum of all groups entropies and Minimum Spanning tree 
+and finally the sum of all groups entropies minus Minimum Spanning tree 
 mutual informations:
 - the k^th nearest neighbour (k = 1..20 by default)
 - the total entropy value (in R units)
@@ -118,8 +121,9 @@ The list of entropies using different k neighbours highlights
 how good is sampling. The entropy should be fairly independent of k,
 except perhaps for the first neighbours, which have higher variance. 
 We found effective, with some thousands conformational samples for 
-proteins to use the MIST approach with m = 2 and any k ranging between 
-2 and 10.
+proteins to use the MIST approach with m = 1 or 2.
+The total entropy corresponding to k = 10 provides typically a stable 
+entropy estimate.  
 sample.pdb is provided here only for demonstrative purposes, and to reduce the 
 computational time. Many more conformational samples (in the range of thousands) 
 are needed for accurate estimations of entropy.

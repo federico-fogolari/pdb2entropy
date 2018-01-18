@@ -53,6 +53,7 @@ struct Tors_def
 char res[5];
 char tors_name[8];
 char at1[5], at2[5], at3[5], at4[5];
+int type;
 double per;
 } Tors_def;
 
@@ -164,7 +165,9 @@ struct Tors_res4nn {
 void read_PDB_atoms(FILE *fp1, int *n_atoms, struct Atom *atoms);
 void read_atom_pdb(char *buf, struct Atom *atom);
 void pdb2tors(struct System system, struct Defs defs, struct Tors_res4nn *tors_res);
-
+double dotv(double *r1, double *r2);
+double modv(double *r1);
+double anglev(double *x1, double *x2, double *x3);
 double distv(double *r1, double *r2);
 double dist_ang(double *a1,double *a2, int n, double *per);
 void init_flag_par(struct Flag_par *flag_par);
@@ -268,10 +271,22 @@ int main(int argc, char *argv[]) {
               defs.tors[i][defs.n_tors[i]].at4,
               &(defs.tors[i][defs.n_tors[i]].per)
               );
-
+              defs.tors[i][defs.n_tors[i]].type = 1;
               defs.tors[i][defs.n_tors[i]].per = 360.0/defs.tors[i][defs.n_tors[i]].per;
               defs.n_tors[i]++;
               }
+             else if(!strncmp(buf,"ANG",strlen("ANG"))) {
+               sscanf(buf,"%*s %s %s %s %s %s", 
+               defs.tors[i][defs.n_tors[i]].res, 
+               defs.tors[i][defs.n_tors[i]].tors_name, 
+               defs.tors[i][defs.n_tors[i]].at1, 
+               defs.tors[i][defs.n_tors[i]].at2, 
+               defs.tors[i][defs.n_tors[i]].at3);
+               defs.tors[i][defs.n_tors[i]].type = 0,
+               defs.tors[i][defs.n_tors[i]].per = 360.0,
+               defs.n_tors[i]++;
+               }
+
             }
           fclose(fp_in_2);
 printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
@@ -476,8 +491,13 @@ tors_res[m].segid);
 fprintf(fp_out_1,"                k   Total entropy\n");
 fprintf(fp_out_1,"                    (R units)\n");
 for(k = 0; k<K-1; k++)
+{
 fprintf(fp_out_1,"Total entropy %5i %10.2lf\n", k+1, ent_k_tot[k]);
-fclose(fp_out_1);
+if(k==9 && (K-2) > 9)
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
+else if(k== (K-2) && (K-2) <= 9)
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
+}
 }
 else if(flag_par.mi)
 {
@@ -757,9 +777,24 @@ kruskal(&entropy, flag_par);
 fprintf(fp_out_1,"                 k   Total entropy\n");
 fprintf(fp_out_1,"                     (R units)\n");
 for(k = 0; k<K-1; k++)
+{
 fprintf(fp_out_1,"Total entropy %5i %10.2lf \n", k+1, entropy.total[k]);
+if(k==9 && (K-2) > 9)
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
+else if(k == (K-2) && (K-2) <= 9)
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
 }
 
+}
+fprintf(fp_out_1,"\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
+
+if((K-2) > 10)
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", 10, ent_k_tot[10]);
+else
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", K-1, ent_k_tot[K-2]);
+fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+
+fclose(fp_out_1);
 }
 void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
 {
@@ -778,7 +813,7 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
  printf("-c X (cutoff distance (Angstrom) for MI)\n");
  printf("-mr X (minimum resolution (radians) assumed to avoid log(0), 5e-4 default)\n");
  printf("-nt X (number of threads to be used, if less than 1 the program finds the number of threads available)\n");
- printf("-rt (superpose all structures to the first one)\n");
+ printf("-nort (do not superpose all structures to the first one)\n");
  printf("-wp pdb_file (write superimposed strcutures in pdb_file)\n");
  printf("-l (list computed angles)\n");
  printf("-v (verbose mode)\n");
@@ -800,7 +835,7 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
   else if (!strncmp(argv[i],"-mi",4)) (*flag_par).mi = 1;
   else if (!strncmp(argv[i],"-nt",4)) (*flag_par).nt = atoi(argv[++i]);
   else if (!strncmp(argv[i],"-kmi",5)) (*flag_par).kmi = atoi(argv[++i]);
-  else if (!strncmp(argv[i],"-rt",4)) (*flag_par).rt = 1;
+  else if (!strncmp(argv[i],"-nort",6)) (*flag_par).rt = 0;
   else if (!strncmp(argv[i],"-wp",4))
                  {
                  flag_par->wp = 1;
@@ -827,7 +862,7 @@ void init_flag_par(struct Flag_par *flag_par)
 (*flag_par).list=0;
 (*flag_par).flag_n=1;
 (*flag_par).nt=1;
-(*flag_par).rt=0;
+(*flag_par).rt=1;
 (*flag_par).wp=0;
 (*flag_par).n=20;
 (*flag_par).verbose=0;
@@ -905,6 +940,7 @@ for(i=0; i<n_res_per_model; i++)
        if(!strcmp(system.residues[i].res_name,defs.res[k])) break;
        id = k;
        for(j = 0; j < defs.n_tors[k]; j++)
+       if(defs.tors[k][j].type == 1)
        {
         v1=v2=v3=v4=NULL;
 
@@ -1024,7 +1060,87 @@ for(i=0; i<n_res_per_model; i++)
          tors_res[i].n_ang++;
          }
          }
-
+          else
+        {
+         v1=v2=v3=NULL;
+         if((defs.tors[k][j].at1[0] == '-'))
+          {
+          if(system.residues[i].prev == (i-1)) 
+            for(l = system.residues[i-1].beg; l <= system.residues[i-1].end; l++)
+               {
+               at = defs.tors[k][j].at1 + 1;
+               if(!strcmp(system.atoms[l].at_name,at))
+               {
+               v1 = system.atoms[l].coor; i1 = l;
+               break;
+               }
+               }
+          }
+           else 
+            for(l = system.residues[i].beg; l <= system.residues[i].end; l++)
+               {
+               at = defs.tors[k][j].at1;
+               if(!strcmp(system.atoms[l].at_name,at))
+               {
+               v1 = system.atoms[l].coor; i1 = l;
+               break;
+               }
+               }
+            for(l = system.residues[i].beg; l <= system.residues[i].end; l++)
+               {
+               at = defs.tors[k][j].at2;
+               if(!strcmp(system.atoms[l].at_name,at))
+               {
+               v2 = system.atoms[l].coor; i2 = l;
+               break;
+               }
+               }
+         if((defs.tors[k][j].at3[0] == '+'))
+          {
+          if(system.residues[i].next == (i+1)) 
+            for(l = system.residues[i+1].beg; l <= system.residues[i+1].end; l++)
+               {
+               at = defs.tors[k][j].at3 + 1;
+               if(!strcmp(system.atoms[l].at_name,at))
+               {
+               v3 = system.atoms[l].coor; i3 = l;
+               break;
+               }
+               }
+           }
+           else 
+            for(l = system.residues[i].beg; l <= system.residues[i].end; l++)
+               {
+               at = defs.tors[k][j].at3;
+               if(!strcmp(system.atoms[l].at_name,at))
+               {
+               v3 = system.atoms[l].coor; i3 = l;
+               break;
+               }
+  
+               }
+          if ( (v1 != NULL) && (v2 != NULL) && (v3 != NULL))
+          {
+          for(l = 0; l< system.n_models; l++)
+            {
+            v1 = system.atoms[i1 + l * n_atoms_per_model].coor;
+            v2 = system.atoms[i2 + l * n_atoms_per_model].coor;
+            v3 = system.atoms[i3 + l * n_atoms_per_model].coor;
+            tors_res[i].phi[tors_res[i].n_ang][l] = anglev(v1,v2,v3);
+            for(n=0; n<3; n++)
+            tors_res[i].v[tors_res[i].n_ang][n] += v2[n] ;
+            }
+            for(n=0; n<3; n++)
+            tors_res[i].v[tors_res[i].n_ang][n] = tors_res[i].v[tors_res[i].n_ang][n]/(double) system.n_models;
+          strcpy(tors_res[i].tors_name[tors_res[i].n_ang],defs.tors[k][j].tors_name);
+          tors_res[i].per[tors_res[i].n_ang] = defs.tors[k][j].per;
+          tors_res[i].chain = system.residues[i].chain;
+          tors_res[i].res_n = system.residues[i].res_n;
+          tors_res[i].res_ins = system.residues[i].res_ins;
+          strcpy(tors_res[i].segid, system.residues[i].seg_name);
+          tors_res[i].n_ang++;
+          }
+          }
 }
 }
 
@@ -1688,6 +1804,21 @@ double torsionv(double *x1, double *x2, double *x3, double *x4)
         return t;
 
 }
+
+double anglev(double *x1, double *x2, double *x3)
+ {
+       
+     double d21,d32,x21[3],x32[3], f, angle;
+     diffv(x21, x2, x1);
+     diffv(x32, x3, x2);
+ 
+     d21 = sqrt(dotv(x21,x21));
+     d32 = sqrt(dotv(x32,x32));
+     f = -dotv(x21,x32)/(d21 * d32);
+ 
+     angle = 180.0 * acos(f) / M_PI;
+     return angle;
+ }
 
 struct node {
       int val;
