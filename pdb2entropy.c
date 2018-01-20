@@ -780,18 +780,18 @@ for(k = 0; k<K-1; k++)
 {
 fprintf(fp_out_1,"Total entropy %5i %10.2lf \n", k+1, entropy.total[k]);
 if(k==9 && (K-2) > 9)
-printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, entropy.total[k]);
 else if(k == (K-2) && (K-2) <= 9)
-printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, entropy.total[k]);
 }
 
 }
 fprintf(fp_out_1,"\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
 
 if((K-2) > 10)
-fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", 10, ent_k_tot[10]);
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", 10, entropy.total[9]);
 else
-fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", K-1, ent_k_tot[K-2]);
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", K-1, entropy.total[K-2]);
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 
 fclose(fp_out_1);
