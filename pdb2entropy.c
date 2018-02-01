@@ -498,6 +498,16 @@ printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k
 else if(k== (K-2) && (K-2) <= 9)
 printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, ent_k_tot[k]);
 }
+fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
+if((K-2) > 10)
+{
+k = 9;
+fprintf(fp_out_1,"Total entropy estimate on %i^th nearest neighbours:\n%10.2lf e.u.\n\n", k+1, ent_k_tot[k]);
+}
+else
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", K-1, ent_k_tot[K-2]);
+fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
+   
 }
 else if(flag_par.mi)
 {
@@ -784,16 +794,18 @@ printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k
 else if(k == (K-2) && (K-2) <= 9)
 printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, entropy.total[k]);
 }
-
-}
 fprintf(fp_out_1,"\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
-
 if((K-2) > 10)
-fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", 10, entropy.total[9]);
+{
+k = 9;
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", k+1, entropy.total[9]);
+}
 else
 fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf e.u.\n", K-1, entropy.total[K-2]);
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 
+
+}
 fclose(fp_out_1);
 }
 void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
