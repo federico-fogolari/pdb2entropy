@@ -1,5 +1,4 @@
 # pdb2entropy
-PDB2ENTROPY: entropy calculation from conformational ensembles
 
 PDB2ENTROPY computes entropies from conformational ensembles in PDB format.
 
