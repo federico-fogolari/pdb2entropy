@@ -535,11 +535,11 @@ for(k = 0; k<K-1; k++)
 {
 fprintf(fp_out_1,"Total entropy %5i %10.2lf +/- %10.2lf\n", k+1, ent_k_tot[k], sqrt(ent_k_tot_2[k]));
 if(k == (ent_x_report.kn - 1))
-printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf e.u.\n", k+1, ent_k_tot[k], sqrt(ent_k_tot_2[k]));
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf R units\n", k+1, ent_k_tot[k], sqrt(ent_k_tot_2[k]));
 }
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
 k = (flag_par.ne - 1);
-fprintf(fp_out_1,"Total entropy estimate on %i^th nearest neighbours:\n%10.2lf +/- %10.2lf e.u.\n\n", k+1, ent_k_tot[k],sqrt(ent_k_tot_2[k]));
+fprintf(fp_out_1,"Total entropy estimate on %i^th nearest neighbours:\n%10.2lf +/- %10.2lf R units\n\n", k+1, ent_k_tot[k],sqrt(ent_k_tot_2[k]));
 ent_x_report.total_entropy = ent_k_tot[k];
 ent_x_report.sd_total_entropy = sqrt(ent_k_tot_2[k]);
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
@@ -850,20 +850,20 @@ for(k = 0; k<K-1; k++)
 fprintf(fp_out_1,"Total entropy %5i %10.2lf +/- %10.2lf\n", k+1, entropy.total[k],sqrt(ent_k_tot_2[k]));
 if(k==(flag_par.kn - 1))
 {
-printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf e.u.\n", k+1, entropy.total[k], sqrt(ent_k_tot_2[k]));
+printf("Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf R units\n", k+1, entropy.total[k], sqrt(ent_k_tot_2[k]));
 ent_x_report.total_entropy = entropy.total[k];
 ent_x_report.sd_total_entropy = sqrt(ent_k_tot_2[k]);
 }
 }
 fprintf(fp_out_1,"\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n");
-fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf e.u.\n", flag_par.kn, ent_x_report.total_entropy, ent_x_report.sd_total_entropy);
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf +/- %10.2lf R units\n", flag_par.kn, ent_x_report.total_entropy, ent_x_report.sd_total_entropy);
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 }
 fclose(fp_out_1);
 
 fp_out_1 = file_open(flag_par.file_out,"w");
 k = (ent_x_report.kn - 1);
-fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n\n%10.2lf +/- %10.2lf e.u.\n\n", flag_par.kn, ent_x_report.total_entropy, ent_x_report.sd_total_entropy);
+fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n\n%10.2lf +/- %10.2lf R units\n\n", flag_par.kn, ent_x_report.total_entropy, ent_x_report.sd_total_entropy);
 fprintf(fp_out_1,"Residue number ins.            entropy          average n.n. \n");
 fprintf(fp_out_1,"chain segid                   (R units)          distance     \n");
 fprintf(fp_out_1,"                                                 (radians)\n");
