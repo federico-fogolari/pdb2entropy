@@ -11,45 +11,41 @@ where additional user's definitions can be easily implemented).
 The program outputs residue-based entropies or maximum-information spanning
 tree entropies, together with information related to the specific method used.
 
-CONTACT:
+CONTACT:  
+Federico Fogolari  
+Dipartimento di Scienze Matematiche, Informatiche e Fisiche  
+Universita' di Udine  
+Via delle Scienze 206  
+33100 Udine - Italy  
+Tel ++39 0432 494320    
+E-mail federico.fogolari@uniud.it  
 
-Federico Fogolari
-Dipartimento di Scienze Matematiche, Informatiche e Fisiche
-Universita' di Udine
-Via delle Scienze 206
-33100 Udine - Italy
-Tel ++39 0432 494320   
-E-mail federico.fogolari@uniud.it
-
-REFERENCE: 
-
-Please cite:
-
-F. Fogolari, O. Maloku, C.J. Dongmo Foumthuim, A. Corazza, G. Esposito
-PDB2ENTROPY and PDB2TRENT: entropy from conformational ensembles
-?????, ????-????, ?????
+REFERENCE:   
+Please cite:  
+F. Fogolari, O. Maloku, C.J. Dongmo Foumthuim, A. Corazza, G. Esposito  
+PDB2ENTROPY and PDB2TRENT: entropy from conformational ensembles  
+?????, ????-????, ?????  
 
 In the built-in superposition tool, routines are suitable modifications of
-those written by D.L. Theobald, therefore, if you use these routines, please 
-cite:
-
-Theobald, D. L. (2005). 
-Rapid calculation of rmsds using a quaternion-based characteristic polynomial. 
-Acta. Crystallogr. A, 61, 478–480.
+those written by D.L. Theobald, therefore, if you use these routines, please
+cite:  
+Theobald, D. L. (2005).   
+Rapid calculation of rmsds using a quaternion-based characteristic polynomial.   
+Acta. Crystallogr. A, 61, 478–480.  
 
 INSTALLATION:
 
 The program is compiled with: 
 
-- if OpenMP is installed: 
+- if OpenMP is installed:  
 cc pdb2entropy.c -o pdb2entropy -lm -fopenmp
 
-- otherwise:
+- otherwise:  
 cc pdb2entropy.c -o pdb2entropy -lm 
 
 FORMAT OF TORSION-ADJACENCY FILE:
 
-The file tors_next_def.dat is provided as a sample file. 
+The file tors_next_def.dat is provided as a sample file.   
 There are two type of records in this file:
 
 - Adjacency record
