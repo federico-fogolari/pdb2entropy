@@ -81,19 +81,19 @@ RUNNING PDB2ENTROPY
 
 Other options are listed hereafter
 
-Usage:
-./pdb2entropy pdb_infile def_infile outfile [Options]
-Options:
--n (max k neighbours for listing entropies (20 default))
--mi (compute entropy from MIST)
+Usage:  
+./pdb2entropy pdb_infile def_infile outfile [Options]  
+Options:  
+-n (max k neighbours for listing entropies (20 default))  
+-mi (compute entropy from MIST)  
 -kmi k (compute entropy from MIST considering mutual information among groups of k variables (default k 1))  
--c X (cutoff distance (Angstrom) for MI pair filtering)
--mr X (minimum resolution (in radians) assumed to avoid log(0), 5e-4 default)
--nt X (number of threads to be used, if less than 1, e.g. with -nt 0, the program finds the number of threads available)
--l (lists all defined torsion angles as rows with values for each conformation)
--nort (do not superpose all structures on the first one)
--wp pdb_file (write superimposed structures in pdb_file)
--v (verbose mode)
+-c X (cutoff distance (Angstrom) for MI pair filtering)  
+-mr X (minimum resolution (in radians) assumed to avoid log(0), 5e-4 default)  
+-nt X (number of threads to be used, if less than 1, e.g. with -nt 0, the program finds the number of threads available)  
+-l (lists all defined torsion angles as rows with values for each conformation)  
+-nort (do not superpose all structures on the first one)  
+-wp pdb_file (write superimposed structures in pdb_file)  
+-v (verbose mode)  
 
 Usage examples:
 
