@@ -21,7 +21,7 @@ Tel ++39 0432 494320
 E-mail federico.fogolari@uniud.it
 
 REFERENCE: 
-Please cite 
+Please cite:
 F. Fogolari, O. Maloku, C.J. Dongmo Foumthuim, A. Corazza, G. Esposito
 PDB2ENTROPY and PDB2TRENT: entropy from conformational ensembles
 ?????, ????-????, ?????
@@ -29,8 +29,9 @@ PDB2ENTROPY and PDB2TRENT: entropy from conformational ensembles
 In the built-in superposition tool, routines are suitable modifications of
 those written by D.L. Theobald, therefore, if you use these routines, please 
 cite:
-Theobald, D. L. (2005). Rapid calculation of rmsds using a quaternion-based
-characteristic polynomial. Acta. Crystallogr. A, 61, 478–480.
+Theobald, D. L. (2005). 
+Rapid calculation of rmsds using a quaternion-based characteristic polynomial. 
+Acta. Crystallogr. A, 61, 478–480.
 
 INSTALLATION:
 
