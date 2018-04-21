@@ -105,7 +105,7 @@ Usage examples:
 
 ./pdb2entropy sample.pdb tors_next_def.dat sample_mi_1.out -c 8.0 -mi -kmi 1  -nt 8   
 
---- compute entropy using MIST. Consider mutual information among groups of up to 2 torsion angles, when at least a couple of torsions is closer in space than 8.0 A. Superpose all structure on the first one and write rotated-translated structures in sample_sup.pdb. Use all available threads:
+--- compute entropy using MIST. Consider mutual information among groups of up to 2 torsion angles, when at least a couple of torsions is closer in space than 8.0 A. Superpose all structure on the first one and write rotated-translated structures in sample_sup.pdb. Use all available threads:  
 ./pdb2entropy sample.pdb tors_next_def.dat sample_mi_2.out -c 8.0 -mi -kmi 2  -nt 0 -wp sample_sup.pdb 
 
 OUTPUT
@@ -140,8 +140,7 @@ Then the output lists the mutual information entering the MIST among groups:
 - the two groups of torsions
 - the mutual information value (in R units)
 
-and finally the sum of all groups entropies minus Minimum Spanning tree 
-mutual informations:
+and finally the sum of all groups entropies minus Minimum Spanning tree mutual informations:
 - the k^th nearest neighbour (k = 1..20 by default)
 - the total entropy value (in R units)
 
