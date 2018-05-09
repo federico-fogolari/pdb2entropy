@@ -1,8 +1,10 @@
 # pdb2entropy
 
 PDB2ENTROPY computes entropies from conformational ensembles in PDB format.
+A utility program (seq2unfent) is also provided to estimate the entropy of the 
+unfolded state of a protein from its sequence.
 
-The program takes in input two files containing:
+PDB2ENTROPY program takes in input two files containing:
 
 1) conformational ensembles of the same molecule(s) in PDB format;
 2) definitions of torsion angles (a default file is provided with the program
@@ -37,7 +39,7 @@ Rapid calculation of rmsds using a quaternion-based characteristic polynomial.
 Acta. Crystallogr. A, 61, 478–480.  
 
 
-INSTALLATION:
+COMPILATION:
 
 The program is compiled with: 
 
@@ -84,16 +86,18 @@ Other options are listed hereafter
 Usage:  
 ./pdb2entropy pdb_infile def_infile outfile [Options]  
 Options:  
--n (max k neighbours for listing entropies (20 default))  
--mi (compute entropy from MIST)  
--kmi k (compute entropy from MIST considering mutual information among groups of k variables (default k 1))  
--c X (cutoff distance (Angstrom) for MI pair filtering)  
--mr X (minimum resolution (in radians) assumed to avoid log(0), 5e-4 default)  
--nt X (number of threads to be used, if less than 1, e.g. with -nt 0, the program finds the number of threads available)  
--l (lists all defined torsion angles as rows with values for each conformation)  
--nort (do not superpose all structures on the first one)  
--wp pdb_file (write superimposed structures in pdb_file)  
--v (verbose mode)  
+-n k (list entropies based on the first k neighbours (20 default))   
+-ne k (entropy estimation based on the kth neighour (10 default))   
+-mi (compute entropy using MIST)   
+-s k (use only one snapshot every k snapshots)  
+-kmi k (torsions are grouped within the same residue in groups of up to k neighbours. Mutual information among groups will involve at most 2k torsions. (default k 1))   
+-c X (cutoff distance (Angstrom) for considering mutual information between two groups (default 6.0 A))   
+-mr X (minimum resolution (radians) assumed to avoid log(0), 5e-4 default)   
+-nt X (number of threads to be used, if less than 1 the program finds the number of threads available)   
+-nort (do not superpose all structures to the first one)   
+-wp pdb_file (write superimposed strcutures in pdb_file)   
+-l (list computed angles)   
+-v (verbose mode)   
 
 Usage examples:
 
@@ -150,4 +154,24 @@ The list of entropies using different k neighbours highlights how good is sampli
 We found effective, with some thousands conformational samples for proteins to use the MIST approach with m = 1 or 2.
 The total entropy corresponding to k = 10 provides typically a stable entropy estimate.  
 sample.pdb is provided here only for demonstrative purposes, and to reduce the computational time. Many more conformational samples (in the range of thousands) are needed for accurate estimations of entropy.
+More example files are available in the Download menu at biophysics.uniud.it
 
+Utility program SEQ2UNFENT
+
+The program seq2unfent takes in input a sequence in fasta format and outputs
+the single residues entropies and total entropy of the unfolded state based
+on the table (Tab. 1) of Fogolari et al., PLOS One, 10, e0132356, 2015.
+
+The utility program seq2unfent is compiled with:  
+
+cc seq2unfent.c -o seq2unfent -lm   
+
+It is run issuing the command:   
+
+./seq2unfent file_sequence.fas file_entropy.out   
+
+where file_sequence.fas is the file containing the sequence in fasta format and file_entropy.out is the output file containing single residues and total entropies of the unfolded state.
+
+Usage example:  
+
+./seq2unfent b2m.fas b2m_unfolded_entropy.out  

@@ -1,8 +1,10 @@
+/* includes */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
+/* defines */
 #define MAX_ANG_PER_RESIDUE 10
 #define HUGE_INT 1000000
 #define MAX_N_RES 1000
@@ -14,8 +16,7 @@
    #define omp_set_num_threads(num_threads) 0
 #endif
 
-
-
+/* structures */
 struct Entropy {
 int n_single;
 int n_pair;
@@ -133,6 +134,7 @@ struct Flag_par {
                int nt;
                int rt;
                int kn;
+               int skip;
                int wp;
                int verbose;
       } Flag_par;
@@ -165,12 +167,24 @@ struct Tors_res4nn {
         double ref;
 } Tors_res4nn;
 
+struct node {
+      int val;
+ double weight;
+};
+
+struct edge {
+  double weight;
+     int u, v;
+};
+
 struct Ent_x_report {
 double total_entropy, sd_total_entropy, *ent_res, *sd_ent_res, *dmean_res;
 int kn,*ndof_res;
 } Ent_x_report;
 
-void read_PDB_atoms(FILE *fp1, int *n_atoms, struct Atom *atoms);
+/* function prototypes */
+
+void read_PDB_atoms(FILE *fp1, int *n_atoms, struct Atom *atoms, int skip);
 void read_atom_pdb(char *buf, struct Atom *atom);
 void pdb2tors(struct System system, struct Defs defs, struct Tors_res4nn *tors_res);
 double dotv(double *r1, double *r2);
@@ -183,6 +197,7 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par);
 void print_info_flag_par(struct Flag_par flag_par);
 int comp (const void * elem1, const void * elem2);
 void copy_atom(struct Atom *atom_to, struct Atom *atom_from);
+void hpsort(struct Atom *ra, int n);
 void make_system(struct System *system);
 void eliminate_alt_loc(struct System *system);
 int is_next(struct System system, int i, int j, struct Next_def next_def);
@@ -198,8 +213,8 @@ double QCProot(double *coeff, double guess, double delta);
 double eval_horn_NR_corrxn(double *c, double x);
 double eval_horn_quart(double *c, double x);
 double eval_horn_quart_deriv(double *c, double x);
-
 FILE *file_open(char *fname,char *acc);
+
 
 
 int main(int argc, char *argv[]) {
@@ -217,9 +232,10 @@ int main(int argc, char *argv[]) {
       struct Tors *tors;
       struct Tors_res4nn *tors_res, *tors_mi, tors_mi2;
 
-
+/* Initialize options in struct flag_par */
         init_flag_par(&flag_par);
 
+/* Check command line for options */
         check_cmd_line(argc, argv, &flag_par);
         if(flag_par.nt < 1)
         num_threads = omp_thread_count();
@@ -228,7 +244,7 @@ int main(int argc, char *argv[]) {
 
         print_info_flag_par(flag_par);
         srand48(1);
-
+/* Count atoms in pdb file, allocate memory and read atoms */
  fp_in_1 = file_open(flag_par.file_in_pdb,"r");
         system.n_atoms = 0;
         while(fgets(buf,120,fp_in_1) != NULL )
@@ -238,14 +254,18 @@ int main(int argc, char *argv[]) {
         if(system.atoms == NULL)
         {printf("I could not allocate memory for %i atoms... exiting...\n", system.n_atoms); exit(0);}
         rewind(fp_in_1);
-        read_PDB_atoms(fp_in_1, &(system.n_atoms), system.atoms);
+        read_PDB_atoms(fp_in_1, &(system.n_atoms), system.atoms, flag_par.skip);
         fclose(fp_in_1);
+/* add random number in range -0.0005 to 0.0005 to each coordinate */
         for(i = 0; i< system.n_atoms; i++)
         for(k = 0; k< 3; k++)
         system.atoms[i].coor[k] += (drand48() - 0.5) * 0.001;
+
+/* Create the structure of the system, by sorting atoms, residues, chains and segments */
+
         make_system(&system);
 
-
+/* read definitions for torsion, angles and adjacent residues */
   fp_in_2 = file_open(flag_par.file_in_def,"r");
           for(i=0;i<MAX_N_RES;i++)
           defs.n_next[i] = defs.n_tors[i] = 0;
@@ -302,7 +322,7 @@ printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
 
 
 
-
+/* check that the number of residues and atoms modulo the number of models is zero and compute number of residues and atoms per model */
 
          if(system.n_residues % system.n_models == 0 && system.n_atoms % system.n_models == 0)
                {
@@ -317,6 +337,9 @@ printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
                printf("n. residues per model = %i\n",n_res_per_model);
                }
           else {printf("n. atoms (%i) and residues (%i) modulo n_models (%i) != 0... exiting\n",system.n_atoms, system.n_residues,system.n_models); exit(0);}
+
+
+/* prepare and allocate structures to store torsions */
      for(i=0; i< n_res_per_model; i++)
       ent_x_report.ent_res[i] = ent_x_report.sd_ent_res[i] = ent_x_report.dmean_res[i] = 0.0;
      for(i=0; i< n_res_per_model; i++)
@@ -346,7 +369,8 @@ printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
 
 
 
-
+/* superimpose models to the first one by default. If not wanted 
+   use the flag -nort on command line */
     R = malloc(3 * sizeof(double *));
     for(i=0; i <3; i++)
         R[i] = malloc(3 * sizeof(double));
@@ -362,6 +386,7 @@ printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
       coords2[i-system.models[j].beg] = system.atoms[i].coor;
       suppos(coords1, coords2, n_atoms_per_model, t, R, &rmsd);
       }
+/* if wanted write out superimposed models */
      if(flag_par.wp)
      {
      fp_out_1=fopen(flag_par.pdb_outfile,"w");
@@ -377,17 +402,23 @@ printf("%i residues read in %s\n", defs.n_res, flag_par.file_in_def);
       }
      fclose(fp_out_1);
      }
+
+/* calculate torsions from coordinates */
      pdb2tors(system, defs, tors_res);
 
+/* once torsions have been computed, free the memory for the system */ 
     free(system.atoms);
     free(system.residues);
     free(system.chains);
     free(system.models);
     free(system.segments);
+
+/* open the file for long output */
 strcpy(buf,flag_par.file_out);
 strcat(buf,".long");
 fp_out_1 = file_open(buf,"w");
 
+/* if wanted output torsion angles */
      if(flag_par.list)
 {
 for(m = 0; m< n_res_per_model; m++)
@@ -406,8 +437,11 @@ fprintf(fp_out_1,"\n");
 }
 }
 
+/* Here the entropy calculation part..... */
 
-
+/* check that the number of available samples is larger than
+the number of neighbours to list (K - 1) and to estimate entropy
+(flag_par.ne) , otherwise reset K  */
 K = flag_par.n + 1;
 if(K > system.n_models)
 {
@@ -420,6 +454,7 @@ else
 ent_x_report.kn = K - 1;
 flag_par.kn = ent_x_report.kn;
 
+/* allocate memory for entropy calculation and listing */
 ent_k = calloc(K-1,sizeof(double));
 ent_k_tot = calloc(K-1,sizeof(double));
 ent_k_2 = calloc(K-1,sizeof(double));
@@ -429,6 +464,7 @@ d_mean = calloc(K,sizeof(double));
 ld_mean = calloc(K,sizeof(double));
 entropy.n_nn = flag_par.n;
 
+/* First option: calculate residue based entropies assuming residue independence*/
 
 if(flag_par.res && !flag_par.mi)
 {
@@ -436,6 +472,7 @@ fprintf(fp_out_1,"          k          entropy            average n.n.  Residue 
 fprintf(fp_out_1,"                     (R units)          distance      chain segid\n");
 fprintf(fp_out_1,"                                        (radians)\n");
 
+/* for each residue ...*/  
 for(m = 0; m < n_res_per_model; m++)
 if(tors_res[m].n_ang > 0)
 {
@@ -454,6 +491,7 @@ for(i=0; i< K-1; i++)
 ent_k[i] = 0;
 ent_k_2[i] = 0;
 }
+/*... and for each sample.... */
 #pragma omp parallel for num_threads(num_threads) private(j,k,d,logdk) shared(ent_k, ent_k_2, d_mean, ld_mean)
 for(i=0; i<system.n_models; i++)
 {
@@ -465,18 +503,24 @@ else if(i%1000 == 0 && i != 0)
 printf("DOING model %i for residue %i\n", i,m);
 }
 d = calloc(system.n_models,sizeof(double));
+/*... calculate the distance between samples in the n_ang - dimensional space
+of torsion angles .... */
 for(j=0; j<system.n_models; j++)
 {
 d[j] = dist_ang(phit[i],phit[j],tors_res[m].n_ang, tors_res[m].per);
 d[j] = d[j] * M_PI/180.0;
 }
+/*.... sort the distances....*/ 
 qsort(d,system.n_models,sizeof(double), comp);
+
+/*... then apply the entropy calculation based on the nearest neighbour ...*/
 for(k = 1; k<K; k++)
 {
+/* if the distance is less than a pre-set value reset the distance
+to the pre-set values... to avoid Nan's */
 if(d[k] < flag_par.minres)
 {
 logdk = log(flag_par.minres);
-
 }
 else
 logdk = log(d[k]);
@@ -503,8 +547,6 @@ c = c +((double) tors_res[m].n_ang) * log(M_PI)/2.0 - lgamma(1.0 + ((double) tor
 
 for(k = 1,L=0; k <= K - 1; k++)
 {
-//printf("%i %lf %lf %lf\n", k, sqrt(ent_k_2[k-1] - ent_k[k-1]*ent_k[k-1]),ent_k_2[k-1] , ent_k[k-1]);
-// uso ent_k_tot_2 per mettere le stdv
 ent_k_tot_2[k-1] = ent_k_tot_2[k-1] + ent_k_2[k-1] - ent_k[k-1]*ent_k[k-1];
 sd_k[k-1] = sqrt(ent_k_2[k-1] - ent_k[k-1]*ent_k[k-1]);
 ent_k[k-1] = ent_k[k-1] + c - L;
@@ -513,6 +555,7 @@ d_mean[k] = d_mean[k]/(double) system.n_models;
 ld_mean[k] = ld_mean[k]/(double) system.n_models;
 ent_k_tot[k-1] = ent_k_tot[k-1] + ent_k[k-1];
 }
+/* ... and output the result based on the kth neighbours .... */
 for(k = 0; k < K - 1; k++)
 {
 fprintf(fp_out_1,"ent_k %5i %9.2lf +/- %9.2lf   %9.2lf --- %4s %5i %c %c %4s\n", k+1, ent_k[k], sd_k[k], d_mean[k+1],
@@ -544,8 +587,12 @@ ent_x_report.total_entropy = ent_k_tot[k];
 ent_x_report.sd_total_entropy = sqrt(ent_k_tot_2[k]);
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 }
+/* second option use groups of variables to compute entropy and their
+mutual information through the MIST approach to provide an estimate of the lower bound on entropy */
 else if(flag_par.mi)
 {
+/*... first find how many groups of up to flag_par.kmi torsions can be defined
+with torsions within the same residue */
 l = 0;
 for(i = 0 ; i< n_res_per_model; i++)
 {
@@ -554,7 +601,7 @@ if( (tors_res[i].n_ang % flag_par.kmi) != 0) l++;
 }
 n_res_per_model_mi = l;
 entropy.n_single = n_res_per_model_mi;
-
+/*... then allocate memory ... */
 entropy.h1 = calloc(n_res_per_model_mi, sizeof(double *));
 entropy.mst1 = calloc(n_res_per_model_mi, sizeof(int));
 entropy.mst2 = calloc(n_res_per_model_mi, sizeof(int));
@@ -574,6 +621,7 @@ for(j=0; j<flag_par.kmi; j++)
 tors_mi[i].tors_name[j] = calloc(8, sizeof(char));
 }
 
+/*... and group torsions ... */
 for(i = 0, j = 0; i< n_res_per_model; i++)
 {
 for(k = 0; k< tors_res[i].n_ang; k++)
@@ -597,6 +645,8 @@ j++;
 }
 }
 }
+
+/* ... list in the long output the groups by their number... */
 for(m = 0; m < n_res_per_model_mi; m++)
 {
 fprintf(fp_out_1,"group %4i: %4s %5i %c %c %4s ", m,
@@ -611,6 +661,8 @@ fprintf(fp_out_1,"%8s ",tors_mi[m].tors_name[j]);
 fprintf(fp_out_1,"\n");
 }
 }
+
+/* ... do the calculation of entropy for each group with the nearest neighbour method ... */
 fprintf(fp_out_1,"          k         entropy            average n.n.  group Residue number ins.\n");
 fprintf(fp_out_1,"                    (R units)          distance        n.  chain segid\n");
 fprintf(fp_out_1,"                                       (radians)\n");
@@ -692,6 +744,7 @@ ent_x_report.dmean_res[group2res[m]] = ent_x_report.dmean_res[group2res[m]] + d_
 ent_x_report.ndof_res[group2res[m]] = ent_x_report.ndof_res[group2res[m]] + tors_mi[m].n_ang;
 }
 }
+/*... and ouput for each single group for the entropy based on the kth neighbours ... */
 for(k = 0; k < K - 1; k++)
 {
 entropy.h1[m][k] = ent_k[k];
@@ -708,6 +761,7 @@ for(m=0; m< n_res_per_model; m++)
 ent_x_report.sd_ent_res[m] = sqrt(ent_x_report.sd_ent_res[m]/(double) ent_x_report.ndof_res[m]);
 ent_x_report.dmean_res[m] = sqrt(ent_x_report.dmean_res[m]/(double) ent_x_report.ndof_res[m]);
 }
+/* ... then prepare for mutual information calculation ... */
 tors_mi2.n_models = system.n_models;
 tors_mi2.phi = calloc(2*flag_par.kmi,sizeof(double *));
 tors_mi2.per = calloc(2*flag_par.kmi,sizeof(double));
@@ -715,7 +769,8 @@ phit = calloc(system.n_models, sizeof(double *));
 for(i = 0; i<system.n_models; i++)
 phit[i] = calloc(2*flag_par.kmi,sizeof(double));
 
-
+/*... based on a cutoff distance, calculate how many pairs of 
+groups must be considered .... */
 for(i = 0; i< n_res_per_model_mi; i++)
 for(j = i+1; j< n_res_per_model_mi; j++)
 {
@@ -729,6 +784,8 @@ entropy.n_pair++;
 }
 }
 printf("entropy.n_pair %i \n", entropy.n_pair);
+
+/*... then allocate memory ... */
 entropy.i1 = calloc(entropy.n_pair,sizeof(int));
 entropy.i2 = calloc(entropy.n_pair,sizeof(int));
 entropy.h2 = calloc(entropy.n_pair,sizeof(double *));
@@ -740,7 +797,8 @@ for(l = 0; l<entropy.n_pair; l++)
 entropy.mi[l] = calloc(K, sizeof(double));
 kk = 0;
 fprintf(fp_out_1,"\nMST[k]   grp1 grp2       MI\n\n");
-
+/* ... and calculate the entropy for paired groups of torsions 
+with the nearest neighbour method ... */
 for(ii = 0; ii< n_res_per_model_mi; ii++)
 for(jj = ii+1; jj< n_res_per_model_mi; jj++)
 for(l = 0; l<tors_mi[ii].n_ang; l++)
@@ -826,7 +884,7 @@ d_mean[k] = d_mean[k]/(double) system.n_models;
 ld_mean[k] = ld_mean[k]/(double) system.n_models;
 ent_k_tot[k-1] = ent_k_tot[k-1] + ent_k[k-1];
 }
-
+/*... compute, by subtraction of single group entropies, the mutual information ...*/ 
 for(k = 0; k < K - 1; k++)
 {
 entropy.h2[kk][k] = ent_k[k];
@@ -836,13 +894,18 @@ entropy.mi[kk][k] = entropy.h2[kk][k] - entropy.h1[entropy.i1[kk]][k] - entropy.
 }
 kk++;
 }
-
+/*...  now use Kruskal's algorithm to compute the maximum information spanning tree (MIST) ... */
 kruskal(&entropy, flag_par,fp_out_1);
+
+/*... assign half of the mutual information to each residue involved in the 
+group of torsions pair ...*/
 for(m=0; m< entropy.n_single; m++)
 {
 ent_x_report.ent_res[group2res[entropy.mst1[m]]] += entropy.mstw[m]/2.0;
 ent_x_report.ent_res[group2res[entropy.mst2[m]]] += entropy.mstw[m]/2.0;
 }
+
+/*... and output the result ...*/
 fprintf(fp_out_1,"                 k   Total entropy\n");
 fprintf(fp_out_1,"                     (R units)\n");
 for(k = 0; k<K-1; k++)
@@ -860,7 +923,7 @@ fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n%10.2lf 
 fprintf(fp_out_1,"\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n");
 }
 fclose(fp_out_1);
-
+/* here open the file for the short report about entropy estimate */
 fp_out_1 = file_open(flag_par.file_out,"w");
 k = (ent_x_report.kn - 1);
 fprintf(fp_out_1,"Total entropy estimate on %5i^th nearest neighbours:\n\n%10.2lf +/- %10.2lf R units\n\n", flag_par.kn, ent_x_report.total_entropy, ent_x_report.sd_total_entropy);
@@ -868,6 +931,7 @@ fprintf(fp_out_1,"Residue number ins.            entropy          average n.n. \
 fprintf(fp_out_1,"chain segid                   (R units)          distance     \n");
 fprintf(fp_out_1,"                                                 (radians)\n");
 for(m = 0; m < n_res_per_model; m++)
+if(tors_res[m].n_ang > 0)
 fprintf(fp_out_1,"%4s %5i %c %c %4s  %9.2lf +/- %9.2lf   %9.2lf\n", 
 tors_res[m].res_name,
 tors_res[m].res_n,
@@ -877,6 +941,8 @@ tors_res[m].segid,
 ent_x_report.ent_res[m], ent_x_report.sd_ent_res[m], ent_x_report.dmean_res[m]);
 fclose(fp_out_1);
 }
+
+/* read the command line */
 void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
 {
  int i;
@@ -888,11 +954,12 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
  printf("Usage:\n");
  printf("./pdb2entropy pdb_infile def_infile outfile [Options]\n");
  printf("Options:\n");
- printf("-n k (max k neighbours for listing entropies (20 default))\n");
- printf("-ne k (kth neighbour for entropy estimation (10 default))\n");
- printf("-mi (compute entropy from mist)\n");
- printf("-kmi k (compute entropy from mist approx. at 2k (default k 1))\n");
- printf("-c X (cutoff distance (Angstrom) for MI)\n");
+ printf("-n k (list entropies based on the first k neighbours (20 default))\n");
+ printf("-ne k (entropy estimation based on the kth neighour (10 default))\n");
+ printf("-mi (compute entropy using MIST)\n");
+ printf("-kmi k (torsions are grouped within the same residue in groups of up to k neighbours. Mutual information among groups will involve at most 2k torsions. (default k 1))\n");
+ printf("-s k (keep only one sample every k samples)\n");
+ printf("-c X (cutoff distance (Angstrom) for considering mutual information between two groups (default 6.0 A))\n");
  printf("-mr X (minimum resolution (radians) assumed to avoid log(0), 5e-4 default)\n");
  printf("-nt X (number of threads to be used, if less than 1 the program finds the number of threads available)\n");
  printf("-nort (do not superpose all structures to the first one)\n");
@@ -918,6 +985,7 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
   else if (!strncmp(argv[i],"-ne",4)) (*flag_par).ne = atoi(argv[++i]);
   else if (!strncmp(argv[i],"-nt",4)) (*flag_par).nt = atoi(argv[++i]);
   else if (!strncmp(argv[i],"-kmi",5)) (*flag_par).kmi = atoi(argv[++i]);
+  else if (!strncmp(argv[i],"-s",3)) (*flag_par).skip = atoi(argv[++i]);
   else if (!strncmp(argv[i],"-nort",6)) (*flag_par).rt = 0;
   else if (!strncmp(argv[i],"-wp",4))
                  {
@@ -940,9 +1008,11 @@ printf("\n########################################################\n\n");
 
 }
 
+/* initialize options */
 void init_flag_par(struct Flag_par *flag_par)
 {
 (*flag_par).list=0;
+(*flag_par).skip=1;
 (*flag_par).flag_n=1;
 (*flag_par).nt=1;
 (*flag_par).ne=10;
@@ -957,6 +1027,7 @@ void init_flag_par(struct Flag_par *flag_par)
 (*flag_par).res=1;
 }
 
+/* print options */
 void print_info_flag_par(struct Flag_par flag_par)
 {
  printf("########################################################\n");
@@ -970,6 +1041,7 @@ void print_info_flag_par(struct Flag_par flag_par)
         else
         printf("I will use all threads available\n");
         printf("I will print entropy only for the first %i neighbours\n", flag_par.n);
+        printf("I will use 1 snapshot every %i snapshots\n", flag_par.skip);
         if(flag_par.list)
         printf("I will print torsion angles\n");
         if(flag_par.rt)
@@ -992,6 +1064,7 @@ void print_info_flag_par(struct Flag_par flag_par)
  printf("########################################################\n\n");
 }
 
+/* calculate torsion angles from coordinates and torsion definitions */
 void pdb2tors(struct System system, struct Defs defs, struct Tors_res4nn *tors_res)
 {
 int i, j, k, l, n, id, prev, next, n_res_per_model, n_atoms_per_model;
@@ -1228,6 +1301,7 @@ for(i=0; i<n_res_per_model; i++)
 }
 }
 
+/* calculate n-dimensional angular distances */
 double dist_ang(double *a1,double *a2, int n, double *per)
 {
 
@@ -1257,6 +1331,7 @@ t = t + d;
 return sqrt(t);
 }
 
+/* implicit compare function for qsort */
 int comp (const void * elem1, const void * elem2) {
     double f1 = *((double *)elem1);
     double f2 = *((double *)elem2);
@@ -1265,6 +1340,7 @@ int comp (const void * elem1, const void * elem2) {
     return 0;
 }
 
+/* wrap of fopen() */
 FILE *file_open(char *fname,char *acc) {
     FILE *fp;
     fp =fopen(fname,acc);
@@ -1276,25 +1352,35 @@ FILE *file_open(char *fname,char *acc) {
     return(fp);
 }
 
-void read_PDB_atoms(FILE *fp1, int *n_atoms, struct Atom *atoms)
+
+/* read coordinates in PDB file */ 
+void read_PDB_atoms(FILE *fp1, int *n_atoms, struct Atom *atoms, int skip)
 {
  char buf[120];
  int i=0;
         int mod_id=1;
+        int j=1;
 
  while(fgets(buf,120,fp1) != NULL )
      if(!strncmp("ATOM",buf,4))
             {
-      atoms[i].model=mod_id;
+      atoms[i].model=j;
    read_atom_pdb(buf, &atoms[i]);
+            if((mod_id % skip) == 0)
             i++;
-     }
+            }
      else
        if(!strncmp("ENDMDL",buf,6))
+              {
               mod_id++;
+              if((mod_id % skip) == 0)
+              j++;
+              }
+
  *n_atoms = i;
 }
 
+/* read atom line in PDB file */
 void read_atom_pdb(char *buf, struct Atom *atom)
 {
 
@@ -1389,7 +1475,7 @@ void read_atom_pdb(char *buf, struct Atom *atom)
 }
 
 
-
+/* implicit compare function for sorting atoms */
 int cmp_atoms(const void *p1, const void *p2)
 {
  struct Atom A_atom, B_atom;
@@ -1444,10 +1530,7 @@ int cmp_atoms(const void *p1, const void *p2)
 
 }
 
-
-void hpsort(struct Atom *ra, int n);
-
-
+/* sort atoms by name, residue number, chain, segment */
 void make_system(struct System *system)
 {
  int n_atoms = system->n_atoms;
@@ -1678,7 +1761,7 @@ if(n_atoms != 0)
  printf("########################################################\n\n");
 }
 
-
+/* heapsort */
 void hpsort(struct Atom *ra, int n)
 {
     int N, i, parent, child;
@@ -1722,7 +1805,7 @@ void hpsort(struct Atom *ra, int n)
     }
 }
 
-
+/* copy struct Atom */
 void copy_atom(struct Atom *atom_to, struct Atom *atom_from)
 {
 int i;
@@ -1742,6 +1825,8 @@ strcpy((*atom_to).segid,(*atom_from).segid);
 strcpy((*atom_to).pdb_chrg,(*atom_from).pdb_chrg);
 }
 
+/* if two sorted atoms are the same, e.g. with different occupancies
+keep the first one */
 void eliminate_alt_loc(struct System *system)
 {
 int i,j;
@@ -1774,7 +1859,7 @@ exit(0);
 }
 }
 
-
+/* check if two residues are adjacent in the chain based on the tors_next definition file */
 int is_next(struct System system, int i, int j, struct Next_def next_def)
 {
 int k, p = 0;
@@ -1799,6 +1884,7 @@ else if(sqrt(
 return p;
 }
 
+/* vector math utilities */
 void scale(double *v, double a)
 {
  v[0] = v[0] * a;
@@ -1904,16 +1990,7 @@ double anglev(double *x1, double *x2, double *x3)
      return angle;
  }
 
-struct node {
-      int val;
- double weight;
-};
-
-struct edge {
-  double weight;
-     int u, v;
-};
-
+/* kruskal algorithm for MIST adapted to entropy calculation */
 void kruskal(struct Entropy *entropy, struct Flag_par flag_par, FILE *fp)
 {
 int i, j, k, kk, v1, v2, l,counts,r;
@@ -1988,7 +2065,7 @@ int compedge (const void *elem1, const void *elem2) {
     return 0;
 }
 
-
+/* superpose two sets of coordinates using and adapting the routines of Theobald */
 void suppos(double **ref, double **mob, int len, double *t, double **R, double *rmsd)
 {
     double innerprod;
@@ -2327,9 +2404,6 @@ double QCProot(double *coeff, double guess, double delta)
     exit(EXIT_FAILURE);
 }
 
-
-
-
 double eval_horn_NR_corrxn(double *c, double x)
 {
     double x2 = x*x;
@@ -2339,15 +2413,10 @@ double eval_horn_NR_corrxn(double *c, double x)
     return((a*x + c[0])/(2.0*x2*x + b + a));
 }
 
-
-
 double eval_horn_quart(double *c, double x)
 {
     return(((x*x + c[2])*x + c[1])*x + c[0]);
 }
-
-
-
 
 double eval_horn_quart_deriv(double *c, double x)
 {
