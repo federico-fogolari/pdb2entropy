@@ -153,8 +153,9 @@ NOTE
 The list of entropies using different k neighbours highlights how good is sampling. The entropy should be fairly independent of k, except perhaps for the first neighbours, which have higher variance. 
 We found effective, with some thousands conformational samples for proteins to use the MIST approach with m = 1 or 2.
 The total entropy corresponding to k = 10 provides typically a stable entropy estimate.  
-sample.pdb is provided here only for demonstrative purposes, and to reduce the computational time. Many more conformational samples (in the range of thousands) are needed for accurate estimations of entropy.
-More example files are available in the Download menu at biophysics.uniud.it
+sample.pdb is provided here only for demonstrative purposes, and to reduce the computational time. Many more conformational samples (in the range of thousands) are needed for accurate estimations of entropy.   
+
+More example files are available in the Download menu at biophysics.uniud.it  
 
 Utility program SEQ2UNFENT
 
