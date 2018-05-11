@@ -244,14 +244,28 @@ int main(int argc, char *argv[]) {
 
         print_info_flag_par(flag_par);
         srand48(1);
-/* Count atoms in pdb file, allocate memory and read atoms */
+/* Count atoms and models in pdb file, allocate memory and read atoms */
  fp_in_1 = file_open(flag_par.file_in_pdb,"r");
         system.n_atoms = 0;
         while(fgets(buf,120,fp_in_1) != NULL )
             if(!strncmp(buf,"ATOM  ",strlen("ATOM  "))) system.n_atoms++;
+            else if(!strncmp(buf,"ENDMDL",strlen("ENDMDL"))) system.n_models++;
         printf("%i atoms found in file %s\n",system.n_atoms,flag_par.file_in_pdb);
+        printf("%i models found in file %s\n",system.n_models,flag_par.file_in_pdb);
+        if(system.n_atoms % system.n_models)
+          {
+           printf("models do not contain the same number of atoms...\nexiting...\n");
+           exit(0);
+          }
+        n_atoms_per_model = system.n_atoms / system.n_models;
+        system.n_models = floor(system.n_models/ flag_par.skip);
+        system.n_atoms = n_atoms_per_model * system.n_models;
+
         system.atoms=calloc(system.n_atoms, sizeof(struct Atom));
-        if(system.atoms == NULL)
+   
+        if(system.atoms != NULL)
+        printf("memory allocated for %i atoms...\n", system.n_atoms);
+        else
         {printf("I could not allocate memory for %i atoms... exiting...\n", system.n_atoms); exit(0);}
         rewind(fp_in_1);
         read_PDB_atoms(fp_in_1, &(system.n_atoms), system.atoms, flag_par.skip);
