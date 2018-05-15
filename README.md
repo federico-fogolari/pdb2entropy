@@ -6,9 +6,9 @@ unfolded state of a protein from its sequence.
 
 PDB2ENTROPY program takes in input two files containing:
 
-1) conformational ensembles of the same molecule(s) in PDB format;
+1) conformational ensembles of the same molecule(s) in PDB format with conformational samples between the MODEL and ENDMDL lines;  
 2) definitions of torsion angles (a default file is provided with the program
-where additional user's definitions can be easily implemented).
+where additional user's definitions can be easily implemented).  
 
 The program outputs residue-based entropies or maximum-information spanning
 tree entropies, together with information related to the specific method used.
@@ -31,12 +31,17 @@ F. Fogolari, O. Maloku, C.J. Dongmo Foumthuim, A. Corazza, G. Esposito
 PDB2ENTROPY and PDB2TRENT: entropy from conformational ensembles  
 J. Chem. Inf. Model. (submitted)
 
+============================================================================
+
 In the built-in superposition tool, routines are suitable modifications of
 those written by D.L. Theobald, therefore, if you use these routines, please
 cite:  
 Theobald, D. L. (2005).   
 Rapid calculation of rmsds using a quaternion-based characteristic polynomial.   
 Acta. Crystallogr. A, 61, 478–480.  
+
+============================================================================
+
 
 
 COMPILATION:
@@ -89,8 +94,8 @@ Options:
 -n k (list entropies based on the first k neighbours (20 default))   
 -ne k (entropy estimation based on the kth neighour (10 default))   
 -mi (compute entropy using MIST)   
--s k (use only one snapshot every k snapshots)  
 -kmi k (torsions are grouped within the same residue in groups of up to k neighbours. Mutual information among groups will involve at most 2k torsions. (default k 1))   
+-s k (use only one snapshot every k snapshots)  
 -c X (cutoff distance (Angstrom) for considering mutual information between two groups (default 6.0 A))   
 -mr X (minimum resolution (radians) assumed to avoid log(0), 5e-4 default)   
 -nt X (number of threads to be used, if less than 1 the program finds the number of threads available)   
@@ -105,7 +110,7 @@ Usage examples:
 
 ./pdb2entropy sample.pdb tors_next_def.dat sample.out -nt 8 -nort
 
---- compute entropy using MIST. Consider only first order mutual information for torsions closer in space than 8.0 A. Use 8 threads for parallel computation. Superpose all structure on the first one:
+--- compute entropy using MIST. Consider only first order mutual information for torsions closer in space than 8.0 A. Use 8 threads for parallel computation. Superpose all structures on the first one:
 
 ./pdb2entropy sample.pdb tors_next_def.dat sample_mi_1.out -c 8.0 -mi -kmi 1  -nt 8   
 
@@ -115,7 +120,7 @@ Usage examples:
 
 OUTPUT
 
-For both maximum information spanning tree (MIST) and residue computations entropies based on the kth (10th by default) nearest neighbour are listed in the output file. First the total entropy and then the entropies for each residue are reported. For MIST calculations the mutual information is divided equally between the residues, when it involves more than one residue. 
+For both maximum information spanning tree (MIST) and residue computations, entropies based on the kth (10th by default) nearest neighbour are listed in the output file. First the total entropy and then the entropies for each residue are reported. For MIST calculations the mutual information is divided equally between the residues, when it involves more than one residue. 
 
 A long version of the same file is created with the same name with the extension .long appended to the file name.  This is described hereafter.
 
@@ -145,7 +150,7 @@ Then the output lists the mutual information entering the MIST among groups:
 - the two groups of torsions
 - the mutual information value (in R units)
 
-and finally the sum of all groups entropies minus Minimum Spanning tree mutual informations:
+and finally the sum of all groups entropies minus MIST mutual informations:
 - the k^th nearest neighbour (k = 1..20 by default)
 - the total entropy value (in R units)
 
