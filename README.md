@@ -1,6 +1,6 @@
 # pdb2entropy
 
-PDB2ENTROPY computes entropies from conformational ensembles in PDB format.
+PDB2ENTROPY computes conformational entropies from conformational ensembles in PDB format.
 A utility program (seq2unfent) is also provided to estimate the entropy of the 
 unfolded state of a protein from its sequence.
 
@@ -11,7 +11,8 @@ PDB2ENTROPY program takes in input two files containing:
 where additional user's definitions can be easily implemented).  
 
 The program outputs residue-based entropies or maximum-information spanning
-tree entropies, together with information related to the specific method used.
+tree entropies, together with information related to the specific method used.  
+Note that only the entropy related to torsional degrees of freedom is computed relative to random distribution.  
 
 CONTACT:  
 
