@@ -993,7 +993,7 @@ void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par)
 
  for (i = 4; i < argc; i++) {
   if (!strncmp(argv[i],"-v",3)) (*flag_par).verbose = 1;
-  else if (!strncmp(argv[i],"-c",3)) (*flag_par).cutoff = atoi(argv[++i]);
+  else if (!strncmp(argv[i],"-c",3)) (*flag_par).cutoff = atof(argv[++i]);
   else if (!strncmp(argv[i],"-mr",4)) (*flag_par).minres = atof(argv[++i]);
   else if (!strncmp(argv[i],"-mi",4)) (*flag_par).mi = 1;
   else if (!strncmp(argv[i],"-ne",4)) (*flag_par).ne = atoi(argv[++i]);
