@@ -247,6 +247,7 @@ int main(int argc, char *argv[]) {
 /* Count atoms and models in pdb file, allocate memory and read atoms */
  fp_in_1 = file_open(flag_par.file_in_pdb,"r");
         system.n_atoms = 0;
+        system.n_models = 0;
         while(fgets(buf,120,fp_in_1) != NULL )
             if(!strncmp(buf,"ATOM  ",strlen("ATOM  "))) system.n_atoms++;
             else if(!strncmp(buf,"ENDMDL",strlen("ENDMDL"))) system.n_models++;
