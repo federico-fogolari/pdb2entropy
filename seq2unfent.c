@@ -109,10 +109,12 @@ int main(int argc, char *argv[]) {
         printf("__________________________________________________________\n\n");
         printf("Entropy of the unfolded protein (in R units) computed from\n");
         printf("table 1 in Fogolari et al., PLOS One, 10, e0132356, 2015\n");
+        printf("updated in Borelli et al. on larger database, 2012\n");
         printf("__________________________________________________________\n\n");
         fprintf(fp,"__________________________________________________________\n\n");
         fprintf(fp,"Entropy of the unfolded protein (in R units) computed from\n");
         fprintf(fp,"table 1 in Fogolari et al., PLOS One, 10, e0132356, 2015\n");
+        fprintf(fp, "updated in Borelli et al. on larger database, 2012\n");
         fprintf(fp,"__________________________________________________________\n\n");
 
 
