@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 /***** local includes *********************/
 
@@ -75,6 +76,7 @@ struct Flag_par {
 void init_flag_par(struct Flag_par *flag_par);
 void check_cmd_line(int argc, char *argv[], struct Flag_par *flag_par);
 void print_info_flag_par(struct Flag_par flag_par);
+int read_seq(char *filename, char *seq);
 
 /**** MAIN *****/
 
@@ -213,7 +215,7 @@ void print_info_flag_par(struct Flag_par flag_par)
 	printf("########################################################\n\n"); 
 }
 
-read_seq(char *filename, char *seq)
+int read_seq(char *filename, char *seq)
 {
 FILE *fp;
 char buf[1024];
